@@ -10,7 +10,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
-import com.datastax.driver.mapping.annotations.Transient;
 
 @Table(keyspace = "voteapp", name = "moderators")
 public class Moderator {
@@ -33,7 +32,7 @@ public class Moderator {
 	
 	@NotEmpty(message = "Please enter your password")
 	@Size(min = 6, max = 12, message = "Your password must be between 6 and 12 characters")
-	@Transient
+	
 	String password;
 	
 	@Column (name = "created_date")

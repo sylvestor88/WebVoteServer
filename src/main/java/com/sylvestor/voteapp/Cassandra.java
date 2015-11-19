@@ -15,11 +15,6 @@ public enum Cassandra {
     private Cluster cluster;
     private static final Logger LOGGER = LoggerFactory.getLogger(Cassandra.class);
 
-    /**
-     * Connect to the cassandra database based on the connection configuration provided.
-     * Multiple call to this method will have no effects if a connection is already established
-     * @param conf the configuration for the connection
-     */
     public void connect() {
         if (cluster == null && session == null) {
             cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
@@ -29,9 +24,6 @@ public enum Cassandra {
         LOGGER.info("Connected to cluster: " + metadata.getClusterName() + " with partitioner: " + metadata.getPartitioner());
     }
 
-    /**
-     * Invalidate and close the session and connection to the cassandra database
-     */
     public void shutdown() {
         LOGGER.info("Shutting down the whole cassandra cluster");
         if (null != session) {

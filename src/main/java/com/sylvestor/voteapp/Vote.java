@@ -11,10 +11,9 @@ public class Vote {
 	
 	@PartitionKey
 	UUID vote_id;
-	
 	Date end_date;
 	Date start_date;
-	
+	String moderator_id;
 	Date added_date;
 	
 	String title;
@@ -37,6 +36,12 @@ public class Vote {
 	}
 	public void setStart_date(Date start_date) {
 		this.start_date = start_date;
+	}
+	public String getModerator_id() {
+		return moderator_id;
+	}
+	public void setModerator_id(String moderator_id) {
+		this.moderator_id = moderator_id;
 	}
 	public Date getAdded_date() {
 		return added_date;

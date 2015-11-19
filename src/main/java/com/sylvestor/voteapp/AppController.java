@@ -30,13 +30,14 @@ public class AppController {
 	// Create Moderator
 	
 	@RequestMapping(value = "moderator", method = RequestMethod.POST, consumes = "application/json")
-	public @ResponseBody Moderator createModerator(
+	public @ResponseBody Message createModerator(
 			@Valid @RequestBody Moderator mod) 
 	{
 		Date currentDate = new Date();
 		mod.setCreated_date(currentDate);
 		CassOperations.saveModerator(mod);
-		return mod;
+		Message msg = new Message("Moderator created!!!");
+		return msg;
 	}
 
 	// Find a Moderator
@@ -98,7 +99,7 @@ public class AppController {
 	
 	//Create a Vote
 	@RequestMapping(value = "moderator/{moderator_id}/vote", method = RequestMethod.POST, consumes = "application/json")
-	public @ResponseBody ResponseEntity<String> createVote(@PathVariable("moderator_id") String modId, @RequestBody Vote vote)
+	public @ResponseBody ResponseEntity<Message> createVote(@PathVariable("moderator_id") String modId, @RequestBody Vote vote)
 	{
 		Moderator m = CassOperations.getModerator(modId);
 		
@@ -106,16 +107,17 @@ public class AppController {
 		{
 			UUID voteId = UUIDs.timeBased();
 			vote.setVote_id(voteId);
-			
+			vote.setModerator_id(modId);
 			Date currentDate = new Date();
 			vote.setAdded_date(currentDate);
 			
 			CassOperations.saveVote(modId, vote);
-			
-			return new ResponseEntity<String>("Vote added succesfully!!", HttpStatus.OK);
+			Message msg = new Message("Vote added succesfully!!");
+			return new ResponseEntity<Message>(msg, HttpStatus.OK);
 		}
 		
-		return new ResponseEntity<String>("Moderator Not Found!!!", HttpStatus.NOT_FOUND);
+		Message msg = new Message("Moderator Not Found!!!");
+		return new ResponseEntity<Message>(msg, HttpStatus.NOT_FOUND);
 	}
 	
 	// Show a Vote
@@ -165,6 +167,7 @@ public class AppController {
 					if(!(v == null))
 					{
 						vote.setAdded_date(v.getAdded_date());
+						vote.setModerator_id(v.getModerator_id());
 						vote.setVote_id(v.getVote_id());
 						CassOperations.saveVote(modId, vote);
 					}
@@ -220,18 +223,20 @@ public class AppController {
     
     // Register a Vote
     
-    @RequestMapping(value = "vote/{vote_id}", method = RequestMethod.PUT, consumes = "application/json")
-    public @ResponseBody ResponseEntity<String> registerVote(
+    @RequestMapping(value = "vote/{vote_id}", method = RequestMethod.PUT, produces = "application/json")
+    public @ResponseBody ResponseEntity<Message> registerVote(
     		@PathVariable("vote_id") UUID voteId, @RequestParam(value = "choice") int choice)
     		{
     				if(choice == 0 || choice == 1)
     				{
     					CassOperations.registerVote(choice, voteId);
-    					return new ResponseEntity<String>("Vote registerted succesfully!!", HttpStatus.OK);
+    					Message msg = new Message("Vote registerted succesfully!!");
+    					return new ResponseEntity<Message>(msg, HttpStatus.OK);
     				}
     				else
     				{
-    					return new ResponseEntity<String>("Invalid Input! Vote not registered.", HttpStatus.NOT_FOUND);
+    					Message msg = new Message("Invalid Input! Vote not registered.");
+    					return new ResponseEntity<Message>(msg, HttpStatus.NOT_FOUND);
     				}
     		}
 }

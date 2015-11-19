@@ -12,22 +12,20 @@ import com.datastax.driver.mapping.Result;
 
 public class CassOperations {
 	
+	// Mapper and PreparedStatements
 	static Mapper<Moderator> moderatorMapper;
 	static Mapper<Vote> voteMapper;
 	static Mapper<VotesByModerator> getVotesByModerator;
-	static PreparedStatement newModerator;
 	static PreparedStatement newVote;
 	static PreparedStatement registerYesVote;
 	static PreparedStatement registerNoVote;
 	static Cassandra cs = Cassandra.DB;
 	
+	// Initialize Mappers and PreparedStatement when Application starts
 	public static void cachedStatements()
 	{
 		cs.connect();
 		moderatorMapper = new MappingManager(cs.getSession()).mapper(Moderator.class);
-		newModerator = cs.getSession().prepare(
-				"INSERT INTO moderators " + "(moderator_id, first_name, last_name, email, password, created_date) " + 
-		"VALUES (?, ?, ?, ?, ?, ?);");
 		newVote = cs.getSession().prepare(
 				"INSERT INTO votes_by_moderator " + "(moderator_id, vote_id, title, description, end_date, start_date) " + 
 		"VALUES (?, ?, ?, ?, ?, ?);");
@@ -37,19 +35,20 @@ public class CassOperations {
 		registerNoVote = cs.getSession().prepare("UPDATE votes_results SET no_count = no_count + 1 WHERE vote_id = ?;");
 	}
 	
+	// Save moderator to the database via Moderator Mapper
 	public static void saveModerator(Moderator mod)
 	{
-		Session session = cs.getSession();
-		BoundStatement boundStatement = new BoundStatement(newModerator);
-		session.execute(boundStatement.bind(mod.getModerator_id(), mod.getFirstName(), mod.getLastName(), mod.getEmail(), mod.getPassword(), mod.getCreated_date()));
+		moderatorMapper.saveAsync(mod);
 	}
 	
+	// Retrieve single moderator from the database via Moderator Mapper
 	public static Moderator getModerator(String modId)
 	{
 		Moderator mod = moderatorMapper.get(modId);	
 		return mod;
 	}
 	
+	// Delete Moderator and all votes posted by that moderayor
 	public static void deleteModerator(String modId)
 	{
 		moderatorMapper.deleteAsync(modId);
@@ -57,6 +56,7 @@ public class CassOperations {
 		session.execute("DELETE FROM votes_by_moderator WHERE moderator_id = \'" + modId + "\';");
 	}
 	
+	// Save new vote in votes and votes_by_moderator table
 	public static void saveVote(String modId, Vote vote)
 	{
 		voteMapper.save(vote);
@@ -65,6 +65,7 @@ public class CassOperations {
 		session.execute(boundStatement.bind(modId, vote.getVote_id(), vote.getTitle(), vote.getDescription(), vote.getEnd_date(), vote.getStart_date()));
 	}
 	
+	// Retrieve all votes for a given moderator
 	public static Result<VotesByModerator> getPollsByModerator(String modId)
 	{
 		Session session = cs.getSession();
@@ -73,11 +74,13 @@ public class CassOperations {
 		return votes;
 	}
 	
+	// Retrieve single vote by ID
 	public static Vote getVote(UUID voteId)
 	{
 		return voteMapper.get(voteId);	
 	}
 	
+	// Retrieve all votes
 	public static Result<Vote> getAllVotes()
 	{
 		Session session = cs.getSession();
@@ -86,6 +89,7 @@ public class CassOperations {
 		return votes;
 	}
 	
+	// Delete vote and all the references
 	public static void deleteVote(String modId, UUID voteId)
 	{
 		Session session = cs.getSession();
@@ -94,6 +98,7 @@ public class CassOperations {
 		session.execute("DELETE from votes_by_moderator WHERE moderator_id = \'" + modId + "\' " + "and vote_id = " + voteId + ";");	
 	}
 	
+	// Register entry for a given vote
 	public static void registerVote(int choice, UUID voteId)
 	{
 		Session session = cs.getSession();
