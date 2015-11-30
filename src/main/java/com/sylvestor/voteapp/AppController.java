@@ -30,14 +30,24 @@ public class AppController {
 	// Create Moderator
 	
 	@RequestMapping(value = "moderator", method = RequestMethod.POST, consumes = "application/json")
-	public @ResponseBody Message createModerator(
+	public @ResponseBody ResponseEntity<Message> createModerator(
 			@Valid @RequestBody Moderator mod) 
 	{
-		Date currentDate = new Date();
-		mod.setCreated_date(currentDate);
-		CassOperations.saveModerator(mod);
-		Message msg = new Message("Moderator created!!!");
-		return msg;
+		Moderator checkMod = CassOperations.getModerator(mod.getModerator_id());
+		
+		if(checkMod == null)
+		{
+			Date currentDate = new Date();
+			mod.setCreated_date(currentDate);
+			CassOperations.saveModerator(mod);
+			Message msg = new Message("Moderator created successfully!!! You can now post a Poll.");
+			return new ResponseEntity<Message>(msg, HttpStatus.CREATED);
+		}
+		else
+		{
+			Message msg = new Message("Moderator with given username already exists!!!");
+			return new ResponseEntity<Message>(msg, HttpStatus.UNPROCESSABLE_ENTITY);
+		}
 	}
 
 	// Find a Moderator
@@ -97,6 +107,21 @@ public class AppController {
 				}
 			}
 	
+	// Login Moderator
+	@RequestMapping(value = "moderator/{moderator_id}/login", method = RequestMethod.GET, produces = "application/json")
+	public @ResponseBody ResponseEntity<Moderator> loginModerator(
+			@PathVariable("moderator_id") String modId)
+			{
+				Moderator mod = CassOperations.getModerator(modId);
+
+				if(!(mod == null))
+				{
+					return new ResponseEntity<Moderator>(mod, HttpStatus.OK);
+				}
+	
+				return new ResponseEntity<Moderator>(HttpStatus.NOT_FOUND);
+			}
+	
 	//Create a Vote
 	@RequestMapping(value = "moderator/{moderator_id}/vote", method = RequestMethod.POST, consumes = "application/json")
 	public @ResponseBody ResponseEntity<Message> createVote(@PathVariable("moderator_id") String modId, @RequestBody Vote vote)
@@ -105,7 +130,7 @@ public class AppController {
 		
 		if(!(m == null))
 		{
-			UUID voteId = UUIDs.timeBased();
+			UUID voteId = UUIDs.random();
 			vote.setVote_id(voteId);
 			vote.setModerator_id(modId);
 			Date currentDate = new Date();
@@ -116,7 +141,7 @@ public class AppController {
 			return new ResponseEntity<Message>(msg, HttpStatus.OK);
 		}
 		
-		Message msg = new Message("Moderator Not Found!!!");
+		Message msg = new Message("Moderator Not Found!!! Sign Up to publish new vote.");
 		return new ResponseEntity<Message>(msg, HttpStatus.NOT_FOUND);
 	}
 	
@@ -127,7 +152,7 @@ public class AppController {
 			{
 				Vote vote = CassOperations.getVote(voteId);
 				if(!(vote == null))
-				{
+				{	
 					return new ResponseEntity<Vote>(vote, HttpStatus.OK);
 				}
 				
@@ -195,30 +220,43 @@ public class AppController {
         	Result<VotesByModerator> resultSet = CassOperations.getPollsByModerator(modId);
         	voteList = resultSet.all();
         	
-        	if(!(voteList == null))
-        		return new ResponseEntity<List<VotesByModerator>>(voteList, HttpStatus.OK);
-        	else
+        	return new ResponseEntity<List<VotesByModerator>>(voteList, HttpStatus.OK);
+        }
+        else{
+        	
         		return new ResponseEntity<List<VotesByModerator>>(HttpStatus.NOT_FOUND);
-
         }
 
-        return new ResponseEntity<List<VotesByModerator>>(HttpStatus.NOT_FOUND);
     }
     
     // Delete a Vote
-    @RequestMapping(value = "moderator/{moderator_id}/vote/{vote_id}", method = RequestMethod.DELETE, consumes = "application/json")
-    public @ResponseBody ResponseEntity<String> deleteVote(
+    @RequestMapping(value = "moderator/{moderator_id}/vote/{vote_id}", method = RequestMethod.DELETE)
+    public @ResponseBody ResponseEntity<Message> deleteVote(
     		@PathVariable("moderator_id") String modId, @PathVariable("vote_id") UUID voteId)
     		{
     			Moderator m = CassOperations.getModerator(modId);
     			
     			if(!(m == null))
     			{
-    					CassOperations.deleteVote(modId, voteId);
-    					return new ResponseEntity<String>("Vote with Id : " + voteId + " deleted successfully!", HttpStatus.OK);
+    				Vote v = CassOperations.getVote(voteId);
+    				    
+    				if(!(v == null))
+    				{
+    				   CassOperations.deleteVote(modId, voteId);
+        			   Message msg = new Message("Vote Deleted Successfully!!!");
+        			   return new ResponseEntity<Message>(msg, HttpStatus.OK);
+    				}
+    				else
+    				{
+    				   Message msg = new Message("Wrong Vote Id. No vote with Id " + voteId + " exists");
+    	    		   return new ResponseEntity<Message>(msg, HttpStatus.NOT_FOUND);
+    				}
     			}
-    			
-    			return new ResponseEntity<String>("Moderator with Id : " + modId + " dnot found!", HttpStatus.NOT_FOUND);
+    			else
+    			{
+    				Message msg = new Message("Wrong Moderator Id. No user with Id " + modId + " exists");
+    				return new ResponseEntity<Message>(msg, HttpStatus.NOT_FOUND);
+    			}
     		}
     
     // Register a Vote
@@ -238,6 +276,21 @@ public class AppController {
     					Message msg = new Message("Invalid Input! Vote not registered.");
     					return new ResponseEntity<Message>(msg, HttpStatus.NOT_FOUND);
     				}
+    		}
+    
+    // Show Vote Result
+    @RequestMapping(value = "vote/{vote_id}/result", method = RequestMethod.GET, produces = "application/json")
+    public @ResponseBody ResponseEntity<VoteResult> getVoteResult(
+    		@PathVariable("vote_id") UUID voteId)
+    		{			
+    			VoteResult voteResult = CassOperations.getVoteResult(voteId);
+    			
+    			if(!(voteResult == null))
+    			{
+    				return new ResponseEntity<VoteResult>(voteResult, HttpStatus.OK);
+    			}
+		
+    			return new ResponseEntity<VoteResult>(HttpStatus.NOT_FOUND);
     		}
 }
 

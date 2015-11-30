@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS voteapp.moderators (
 
 
 CREATE TABLE IF NOT EXISTS voteapp.votes (
-	vote_id timeuuid,
+	vote_id uuid,
 	moderator_id text,
 	end_date timestamp,
 	start_date timestamp,
@@ -25,7 +25,7 @@ WITH CLUSTERING ORDER BY (end_date DESC, start_date DESC);
 
 CREATE TABLE IF NOT EXISTS voteapp.votes_by_moderator (
 	moderator_id text,	
-	vote_id timeuuid,
+	vote_id uuid,
 	title text,
 	description text,
 	end_date timestamp,
@@ -36,7 +36,7 @@ WITH CLUSTERING ORDER BY (vote_id DESC);
 
 
 CREATE TABLE IF NOT EXISTS voteapp.votes_results (		
-	vote_id timeuuid,
+	vote_id uuid,
 	yes_count counter,
 	no_count counter,
 	PRIMARY KEY((vote_id))

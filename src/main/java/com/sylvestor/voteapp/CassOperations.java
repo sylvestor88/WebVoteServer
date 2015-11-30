@@ -16,6 +16,7 @@ public class CassOperations {
 	static Mapper<Moderator> moderatorMapper;
 	static Mapper<Vote> voteMapper;
 	static Mapper<VotesByModerator> getVotesByModerator;
+	static Mapper<VoteResult> voteResultMapper;
 	static PreparedStatement newVote;
 	static PreparedStatement registerYesVote;
 	static PreparedStatement registerNoVote;
@@ -33,6 +34,7 @@ public class CassOperations {
 		getVotesByModerator = new MappingManager(cs.getSession()).mapper(VotesByModerator.class);
 		registerYesVote = cs.getSession().prepare("UPDATE votes_results SET yes_count = yes_count + 1 WHERE vote_id = ?;");
 		registerNoVote = cs.getSession().prepare("UPDATE votes_results SET no_count = no_count + 1 WHERE vote_id = ?;");
+		voteResultMapper = new MappingManager(cs.getSession()).mapper(VoteResult.class);
 	}
 	
 	// Save moderator to the database via Moderator Mapper
@@ -113,5 +115,11 @@ public class CassOperations {
 			BoundStatement boundStatement = new BoundStatement(registerNoVote);
 			session.execute(boundStatement.bind(voteId));
 		}
+	}
+	
+	// Retrieve Vote Result
+	public static VoteResult getVoteResult(UUID voteId)
+	{
+		return voteResultMapper.get(voteId);
 	}
 }

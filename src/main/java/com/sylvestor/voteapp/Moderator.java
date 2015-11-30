@@ -32,7 +32,6 @@ public class Moderator {
 	
 	@NotEmpty(message = "Please enter your password")
 	@Size(min = 6, max = 12, message = "Your password must be between 6 and 12 characters")
-	
 	String password;
 	
 	@Column (name = "created_date")
