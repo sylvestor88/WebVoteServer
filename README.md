@@ -10,6 +10,6 @@ To Post polls, users need to sign up to become a Moderator. The moderators can t
 
 The server application is currently running on EC2 instance. The client is running on:
 
-'''sh
+```sh
 http://angularclient-sylvestor88.c9users.io/index.html
-'''
+```
