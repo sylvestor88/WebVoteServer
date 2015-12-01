@@ -8,4 +8,8 @@ The VoteApp allows users to Post Polls they want people to vote for either as Ye
 #### How?
 To Post polls, users need to sign up to become a Moderator. The moderators can then create any number of Polls they wish to post and share the link with people to vote. Voters do not require to sign in to vote for on a poll. The application does not restrict people to cast multiple votes.
 
-The server application is currently running on EC2 instance.
+The server application is currently running on EC2 instance. The client is running on:
+
+'''sh
+http://angularclient-sylvestor88.c9users.io/index.html
+'''
